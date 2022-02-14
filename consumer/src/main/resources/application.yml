@@ -1,0 +1,20 @@
+spring:
+  rabbitmq:
+    host: 106.55.247.80
+    port: 5672
+    virtual-host: learn
+    username: admin
+    password: admin
+    publisher-returns: true              #生成端消息返回机制
+    publisher-confirm-type: correlated   #生产端消息确认机制
+    template:
+      mandatory: true                    #生产端消息返回机制
+    listener:
+      type: simple
+      simple:
+        default-requeue-rejected: false
+        acknowledge-mode: manual
+        concurrency: 3
+        max-concurrency: 5
+server:
+  port: 8081
