@@ -53,11 +53,14 @@ public class ConsumerMessage {
 
         //告诉broker，消息已经被确认
         //成功确认，使用此回执方法后，消息会被 rabbitmq broker 删除
-//        channel.basicAck(msgTag, false);
+        //Qos限流
+        channel.basicQos(1);
+
+        channel.basicAck(msgTag, false);
 
         //告诉broker，消息拒绝确认,并重回队列
 //        channel.basicNack(msgTag,false,true);
         //告诉broker，消息拒绝确认,并不重回队列
-        channel.basicNack(msgTag, false, false);
+//        channel.basicNack(msgTag, false, false);
     }
 }
