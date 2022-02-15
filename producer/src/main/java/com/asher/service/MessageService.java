@@ -1,5 +1,6 @@
 package com.asher.service;
 
+import com.asher.constant.consist.RabbitConsts;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -24,20 +25,21 @@ public class MessageService {
     }
 
 
-    public void sendMessage() throws IOException, InterruptedException {
+    public void sendMessage() {
 
         //设置返回机制的回调函数
         rabbitTemplate.setMandatory(true);
         rabbitTemplate.setReturnCallback((message, replyCode, replyText, exchange, routingKey) -> {
-            log.error("消息{}路由失败，失败原因：{}", message.getMessageProperties().getMessageId(), replyText);
+            log.error("消息{}路由失败，失败原因：{}", message.getMessageProperties().getHeader(
+                    "spring_returned_message_correlation"), replyText);
         });
 
         //设置确认机制的回调函数
         rabbitTemplate.setConfirmCallback((correlationData, ack, cause) -> {
             if (ack) {
-                log.info(correlationData != null ? correlationData.getId() : "null" + "发送成功");
+                log.info((correlationData != null ? correlationData.getId() : "null") + "发送成功");
             } else {
-                log.error(correlationData != null ? correlationData.getId() : "null" + "发送失败， 原因： " + cause);
+                log.error((correlationData != null ? correlationData.getId() : "null") + "发送失败， 原因： " + cause);
             }
         });
 
@@ -45,7 +47,7 @@ public class MessageService {
         MessageProperties messageProperties = new MessageProperties();
         messageProperties.setExpiration("15000");
 
-        String s = "message";
+        String s = "send message";
         Message message = new Message(s.getBytes(), messageProperties);
 
         //设置id在消息确认机制可以识别发送的是什么消息
@@ -54,8 +56,8 @@ public class MessageService {
 
 
         rabbitTemplate.send(
-                "exchange.order.restaurant",
-                "key.restaurant",
+                RabbitConsts.EXCHANGE_TEST,
+                "key.test",
                 message, correlationData
         );
 
@@ -69,7 +71,11 @@ public class MessageService {
         //            return null;
         //        });
 
-        Thread.sleep(1000);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 }
